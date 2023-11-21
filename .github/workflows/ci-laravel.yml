@@ -70,6 +70,11 @@ jobs:
     - name: Clear cache config (needed after generating key)
       working-directory: ${{ github.workspace }}/laravel
       run: php artisan config:clear
+    
+
+    - name: Double check the env file
+      working-directory: ${{ github.workspace }}/laravel
+      run: cat .env
 
     - name: Directory Permissions
       working-directory: ${{ github.workspace }}/laravel
