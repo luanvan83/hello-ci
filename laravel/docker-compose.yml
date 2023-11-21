@@ -1,0 +1,16 @@
+version: '2'
+services:
+    php:
+        build:
+            context: .
+            dockerfile: ./docker/Dockerfile
+        # Auto reload when you changing code
+        # You can comment this statement(Run by using php-fpm but you need running with nginx and chang 127.0.0.1 to php)
+        # command: "php artisan serve --host 0.0.0.0"
+        volumes:
+            - .:/app
+        ports:
+            - "8008:8008"
+        environment:
+            - ENV=local
+            - RUNNING_ARTISAN_DB_SEEDING=true
