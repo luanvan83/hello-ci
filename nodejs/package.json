@@ -1,0 +1,29 @@
+{
+  "name": "github-action-for-nodejs",
+  "version": "1.0.0",
+  "description": "Github action for nodejs",
+  "private": true,
+  "scripts": {
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/luanvan83/hello-ci.git"
+  },
+  "author": "Luan Nguyen",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/luanvan83/hello-ci/issues"
+  },
+  "homepage": "https://github.com/luanvan83/hello-ci#readme",
+  "dependencies": {
+    "jest": "^29.6.1",
+    "supertest": "^6.3.3"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "coveragePathIgnorePatterns": [
+      "/node_modules/"
+    ]
+  }
+}

@@ -1,0 +1,120 @@
+name: Test Laravel
+
+on:
+  push:
+    branches: [ "ci-laravel" ]
+  pull_request:
+    branches: [ "ci-laravel" ]
+
+jobs:
+  laravel-tests:
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        operating-system: [ubuntu-latest]
+        php-versions: [ '8.1' ]
+        dependency-stability: [ 'prefer-none' ]
+        laravel: ['9.x']
+
+    name: PHP-${{ matrix.php-versions }} - Lara-${{ matrix.laravel }} - ${{ matrix.operating-system}}
+
+    steps:
+    - name: Install PHP versions
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: ${{ matrix.php-versions }}
+        extensions: pdo_mysql,gd,zip
+    - uses: actions/checkout@v3
+    - name: Get Composer Cache Directory 2
+      id: composer-cache
+      run: |
+        echo "::set-output name=dir::$(composer config cache-files-dir)"
+    - uses: actions/cache@v3
+      id: actions-cache
+      with:
+        path: ${{ steps.composer-cache.outputs.dir }}
+        key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-composer-
+    - name: Cache PHP dependencies
+      uses: actions/cache@v3
+      id: vendor-cache
+      with:
+        path: vendor
+        key: ${{ runner.OS }}-build-${{ hashFiles('**/composer.lock') }}
+    - name: Copy .env
+      working-directory: ${{ github.workspace }}/laravel
+      run: php -r "file_exists('.env') || copy('.env.testing', '.env');"
+    - name: Install Dependencies
+      working-directory: ${{ github.workspace }}/laravel
+      if: steps.vendor-cache.outputs.cache-hit != 'true'
+      run: composer install -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
+
+    - name: Update Dependencies with latest stable
+      working-directory: ${{ github.workspace }}/laravel
+      if: matrix.dependency-stability == 'prefer-stable'
+      run: composer update --prefer-stable
+
+    - name: Update Dependencies with lowest stable
+      working-directory: ${{ github.workspace }}/laravel
+      if: matrix.dependency-stability == 'prefer-lowest'
+      run: composer update --prefer-stable --prefer-lowest
+
+    - name: Generate key
+      working-directory: ${{ github.workspace }}/laravel
+      run: php artisan key:generate
+    
+    # Should not cache when run CI
+    #- name: Cache config (needed after generating key)
+    #  working-directory: ${{ github.workspace }}/laravel
+    #  run: php artisan config:cache
+
+    - name: Directory Permissions
+      working-directory: ${{ github.workspace }}/laravel
+      run: chmod -R 777 storage bootstrap/cache public/htmlfiledownload public/htmlmaildownload
+
+#    - name: Run Migrations
+# Set environment
+#      env:
+#        SESSION_DRIVER: array
+#        DB_CONNECTION: sqlite
+#        DB_DATABASE: ":memory:"
+
+#      run: php artisan migrate
+
+    - name: Build LHA
+      working-directory: ${{ github.workspace }}/laravel
+      run: |
+        echo ${{ github.workspace }}
+        echo $GITHUB_WORKSPACE
+        cd storage/framework
+        tar zxvf lha-1.14i-ac20050924p1.tar.gz
+        cd lha-1.14i-ac20050924p1
+        pwd
+        ./configure
+        sudo make && sudo make install
+        /usr/local/bin/lha --version
+        cd ${{ github.workspace }}
+
+    - name: Create Database
+      working-directory: ${{ github.workspace }}/laravel
+      run: |
+        mkdir -p database
+        touch database/database.sqlite
+
+    - name: Show dir
+      working-directory: ${{ github.workspace }}/laravel
+      run: pwd
+
+    - name: PHP Version
+      working-directory: ${{ github.workspace }}/laravel
+      run: php --version
+
+    - name: Execute tests (Unit and Feature tests) via PHPUnit
+      working-directory: ${{ github.workspace }}/laravel
+      env:
+        DB_CONNECTION: sqlite
+        DB_DATABASE: database/database.sqlite
+      run: vendor/bin/phpunit
