@@ -67,9 +67,9 @@ jobs:
       run: php artisan key:generate
     
     # Should not cache when run CI
-    #- name: Cache config (needed after generating key)
-    #  working-directory: ${{ github.workspace }}/laravel
-    #  run: php artisan config:cache
+    - name: Clear cache config (needed after generating key)
+      working-directory: ${{ github.workspace }}/laravel
+      run: php artisan config:clear
 
     - name: Directory Permissions
       working-directory: ${{ github.workspace }}/laravel
@@ -84,6 +84,7 @@ jobs:
 
 #      run: php artisan migrate
 
+    # Build custom extension for my own project, probarly your project does not need this
     - name: Build LHA
       working-directory: ${{ github.workspace }}/laravel
       run: |
@@ -98,6 +99,7 @@ jobs:
         /usr/local/bin/lha --version
         cd ${{ github.workspace }}
 
+    # Run unittest with Sqlite
     - name: Create Database
       working-directory: ${{ github.workspace }}/laravel
       run: |
