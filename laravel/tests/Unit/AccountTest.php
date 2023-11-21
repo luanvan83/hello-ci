@@ -13,9 +13,6 @@ class AccountTest extends TestCase
     use DatabaseMigrations;
     static private $databaseSeed = false;
 
-    /**
-     * 前処理
-     */
     public function setUp(): void {
         parent::setUp();
         

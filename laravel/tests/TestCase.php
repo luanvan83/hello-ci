@@ -26,7 +26,6 @@ abstract class TestCase extends BaseTestCase
             $this->refreshApplication();
         }
 
-        // 最初のみ実行するフラグを追加
         if (!static::$databaseSetup) {
             Artisan::call('migrate:fresh');
             Artisan::call('migrate');
